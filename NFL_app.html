@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFL Parlay Generator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #252540;
+            --accent: #00d4aa;
+            --accent-hover: #00b894;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: #333355;
+            --success: #00d4aa;
+            --danger: #ff6b6b;
+            --warning: #ffd93d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #16213e 100%);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+        }
+        
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .logo p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+        
+        .sidebar h2 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .slider-container input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: var(--bg-card);
+            border-radius: 3px;
+            border: none;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        /* Player Selection */
+        .player-grid {
+            display: grid;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .player-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .player-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .player-option.selected {
+            border-color: var(--accent);
+            background: rgba(0, 212, 170, 0.1);
+        }
+        
+        .player-option input {
+            display: none;
+        }
+        
+        .player-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .player-option.selected .player-checkbox {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .player-checkbox::after {
+            content: '✓';
+            color: var(--bg-primary);
+            font-size: 12px;
+            opacity: 0;
+        }
+        
+        .player-option.selected .player-checkbox::after {
+            opacity: 1;
+        }
+        
+        .player-info {
+            flex: 1;
+        }
+        
+        .player-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .player-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .has-stats {
+            color: var(--success);
+            font-size: 0.7rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            background: var(--bg-card);
+        }
+        
+        .tab.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        /* Player Stats Card */
+        .player-card {
+            background: linear-gradient(145deg, var(--bg-secondary), var(--bg-card));
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+        
+        .player-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .player-card-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .player-card-pos {
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        /* Projection Card */
+        .projection-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+        
+        .projection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .projection-player {
+            font-weight: 600;
+        }
+        
+        .projection-pos {
+            font-size: 0.75rem;
+            color: var(--accent);
+        }
+        
+        .projection-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .projection-stat {
+            font-weight: 500;
+        }
+        
+        .projection-value {
+            font-weight: 600;
+        }
+        
+        .projection-edge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .edge-positive {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--success);
+        }
+        
+        .edge-negative {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+        }
+        
+        /* Parlay Slip */
+        .parlay-slip {
+            background: linear-gradient(145deg, #1a2a1a, #0d1f0d);
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .parlay-slip h3 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .parlay-leg {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 212, 170, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .parlay-leg-info {
+            flex: 1;
+        }
+        
+        .parlay-leg-player {
+            font-weight: 600;
+        }
+        
+        .parlay-leg-prop {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .parlay-leg-edge {
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .parlay-leg-edge.high { color: var(--success); }
+        .parlay-leg-edge.med { color: var(--warning); }
+        .parlay-leg-edge.low { color: var(--danger); }
+        
+        .parlay-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .parlay-summary-item {
+            text-align: center;
+        }
+        
+        .parlay-summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .parlay-summary-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: var(--bg-primary);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 170, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+        
+        /* Line Input for Projections */
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .confidence-high { background: var(--success); }
+        .confidence-med { background: var(--warning); }
+        .confidence-low { background: var(--danger); }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Analysis Section */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .analysis-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+        
+        .analysis-card h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .analysis-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent);
+            color: var(--bg-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Refresh Button */
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .refresh-btn.loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .refresh-btn .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Favorite Star */
+        .fav-star {
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+        
+        .fav-star:hover {
+            transform: scale(1.2);
+        }
+        
+        .fav-star.active {
+            color: #ffd700;
+        }
+        
+        /* Header Controls */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .game-selector {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        .game-selector:hover {
+            border-color: var(--accent);
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-badge.live {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+        }
+        
+        .status-badge.upcoming {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--success);
+        }
+        
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .status-badge.live .dot {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* Last Updated */
+        .last-updated {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🏈</span>
+                <div>
+                    <h1>NFL Parlay Generator</h1>
+                    <p>Predictive Analytics & Projection Builder</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <select class="game-selector" id="game-selector" onchange="selectGame()">
+                    <!-- Games loaded dynamically -->
+                </select>
+                <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">
+                    <span id="refresh-icon">🔄</span>
+                    <span>Refresh</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin-bottom: 0;">⭐ My Team</h2>
+            </div>
+            
+            <div class="form-group">
+                <label>Favorite Team</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="favorite-team" style="flex: 1;" onchange="saveFavoriteTeam()">
+                        <option value="">Select a team...</option>
+                        <option value="ARI">Arizona Cardinals</option>
+                        <option value="ATL">Atlanta Falcons</option>
+                        <option value="BAL">Baltimore Ravens</option>
+                        <option value="BUF">Buffalo Bills</option>
+                        <option value="CAR">Carolina Panthers</option>
+                        <option value="CHI">Chicago Bears</option>
+                        <option value="CIN">Cincinnati Bengals</option>
+                        <option value="CLE">Cleveland Browns</option>
+                        <option value="DAL">Dallas Cowboys</option>
+                        <option value="DEN">Denver Broncos</option>
+                        <option value="DET">Detroit Lions</option>
+                        <option value="GB">Green Bay Packers</option>
+                        <option value="HOU">Houston Texans</option>
+                        <option value="IND">Indianapolis Colts</option>
+                        <option value="JAX">Jacksonville Jaguars</option>
+                        <option value="KC">Kansas City Chiefs</option>
+                        <option value="LV">Las Vegas Raiders</option>
+                        <option value="LAC">Los Angeles Chargers</option>
+                        <option value="LAR">Los Angeles Rams</option>
+                        <option value="MIA">Miami Dolphins</option>
+                        <option value="MIN">Minnesota Vikings</option>
+                        <option value="NE">New England Patriots</option>
+                        <option value="NO">New Orleans Saints</option>
+                        <option value="NYG">New York Giants</option>
+                        <option value="NYJ">New York Jets</option>
+                        <option value="PHI">Philadelphia Eagles</option>
+                        <option value="PIT">Pittsburgh Steelers</option>
+                        <option value="SF">San Francisco 49ers</option>
+                        <option value="SEA">Seattle Seahawks</option>
+                        <option value="TB">Tampa Bay Buccaneers</option>
+                        <option value="TEN">Tennessee Titans</option>
+                        <option value="WSH">Washington Commanders</option>
+                    </select>
+                    <span class="fav-star" id="fav-star" onclick="toggleFavorite()">☆</span>
+                </div>
+                <p class="last-updated" id="last-updated">Last updated: --</p>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+            
+            <h2>🎮 Game Settings</h2>
+            
+            <div class="form-group">
+                <label>Spread (<span id="spread-team">WSH</span>)</label>
+                <div class="slider-container">
+                    <input type="range" id="spread" min="-10" max="10" step="0.5" value="-3">
+                    <span class="slider-value" id="spread-value">-3.0</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Total (O/U)</label>
+                <div class="slider-container">
+                    <input type="range" id="total" min="35" max="60" step="0.5" value="45.5">
+                    <span class="slider-value" id="total-value">45.5</span>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>DEN Def Rank</label>
+                    <input type="number" id="den-rank" min="1" max="32" value="10">
+                </div>
+                <div class="form-group">
+                    <label>WSH Def Rank</label>
+                    <input type="number" id="wsh-rank" min="1" max="32" value="18">
+                </div>
+            </div>
+            
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+            
+            <h2>👥 Select Players</h2>
+            
+            <div class="form-group">
+                <label>Team Filter</label>
+                <select id="team-filter" onchange="filterPlayers()">
+                    <option value="all">Both Teams</option>
+                    <option value="DEN">Denver Broncos</option>
+                    <option value="WSH">Washington Commanders</option>
+                </select>
+            </div>
+            
+            <div class="player-grid" id="player-grid">
+                <!-- Players loaded via JS -->
+            </div>
+            
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.75rem;">
+                ✓ = Stats pre-loaded | Select up to 6 players
+            </p>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('stats')">📊 Player Stats</button>
+                <button class="tab" onclick="showTab('projections')">🎯 Projections</button>
+                <button class="tab" onclick="showTab('parlay')">📋 Pick Builder</button>
+                <button class="tab" onclick="showTab('analysis')">📈 Analysis</button>
+            </div>
+            
+            <!-- Stats Tab -->
+            <div class="tab-content active" id="tab-stats">
+                <div id="stats-container">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👈</div>
+                        <p>Select players from the sidebar to view their stats</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Projections Tab -->
+            <div class="tab-content" id="tab-projections">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🎯 Model Projections</h3>
+                        <button class="btn btn-primary" onclick="generateProjections()">Generate Projections</button>
+                    </div>
+                    <div id="projections-container">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎯</div>
+                            <p>Select players and click "Generate Projections"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Parlay Tab -->
+            <div class="tab-content" id="tab-parlay">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Build Your Parlay</h3>
+                        <button class="btn btn-secondary" onclick="clearParlay()">Clear All</button>
+                    </div>
+                    <div id="parlay-options">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎰</div>
+                            <p>Generate projections first to build your parlay</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="parlay-slip" id="parlay-slip" style="display: none;">
+                    <h3>📋 My Picks</h3>
+                    <div id="parlay-legs"></div>
+                    <div class="parlay-summary">
+                        <div class="parlay-summary-item">
+                            <div class="parlay-summary-value" id="parlay-legs-count">0</div>
+                            <div class="parlay-summary-label">Legs</div>
+                        </div>
+                        <div class="parlay-summary-item">
+                            <div class="parlay-summary-value" id="parlay-edge">0%</div>
+                            <div class="parlay-summary-label">Avg Confidence</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analysis Tab -->
+            <div class="tab-content" id="tab-analysis">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Game Script Analysis</h3>
+                    </div>
+                    
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>Spread</h4>
+                            <div class="value" id="analysis-spread">WSH -3.0</div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>Total</h4>
+                            <div class="value" id="analysis-total">45.5</div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>DEN Implied</h4>
+                            <div class="value" id="analysis-den-implied">21.25</div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>WSH Implied</h4>
+                            <div class="value" id="analysis-wsh-implied">24.25</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1.25rem; background: var(--bg-card); border-radius: 12px;">
+                        <h4 style="color: var(--accent); margin-bottom: 0.5rem;">📊 Game Script Indicator</h4>
+                        <p id="script-indicator" style="color: var(--text-secondary);">Neutral Script - Balanced game expected</p>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">Correlation Guide</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <th style="text-align: left; padding: 0.75rem; color: var(--text-secondary);">Prop Combo</th>
+                                    <th style="text-align: center; padding: 0.75rem; color: var(--text-secondary);">Correlation</th>
+                                    <th style="text-align: left; padding: 0.75rem; color: var(--text-secondary);">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 0.75rem;">QB Pass Yds + WR Rec Yds</td><td style="text-align: center; color: var(--success);">Strong +</td><td style="padding: 0.75rem; color: var(--text-secondary);">Same-game stack</td></tr>
+                                <tr><td style="padding: 0.75rem;">QB Pass Att + WR Receptions</td><td style="text-align: center; color: var(--success);">Strong +</td><td style="padding: 0.75rem; color: var(--text-secondary);">Volume correlation</td></tr>
+                                <tr><td style="padding: 0.75rem;">RB Rush Yds + Team Leading</td><td style="text-align: center; color: var(--warning);">Moderate +</td><td style="padding: 0.75rem; color: var(--text-secondary);">Game script</td></tr>
+                                <tr><td style="padding: 0.75rem;">QB Rush Yds + RB Rush Att</td><td style="text-align: center; color: var(--danger);">Weak -</td><td style="padding: 0.75rem; color: var(--text-secondary);">Inverse</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">Model Weights</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div style="background: var(--bg-card); padding: 1rem; border-radius: 8px;">
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Last 5 Games</p>
+                                <div style="background: var(--bg-primary); border-radius: 4px; height: 8px; overflow: hidden;">
+                                    <div style="background: var(--accent); width: 65%; height: 100%;"></div>
+                                </div>
+                                <p style="font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;">65%</p>
+                            </div>
+                            <div style="background: var(--bg-card); padding: 1rem; border-radius: 8px;">
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Season Average</p>
+                                <div style="background: var(--bg-primary); border-radius: 4px; height: 8px; overflow: hidden;">
+                                    <div style="background: var(--accent); width: 35%; height: 100%;"></div>
+                                </div>
+                                <p style="font-size: 0.9rem; font-weight: 600; margin-top: 0.5rem;">35%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+        <footer>
+        ⚠️ Projections for entertainment & research only. Not financial advice. | NFL Analytics v2.0
+    </footer>    <div class="toast" id="toast"></div>
+
+    <script>
+        // NFL Schedule Data (Week 13)
+        const NFL_SCHEDULE = [
+            { id: 1, away: 'DEN', home: 'WSH', date: '2024-11-30', time: '8:00 PM ET', status: 'upcoming' },
+            { id: 2, away: 'KC', home: 'LV', date: '2024-12-01', time: '4:25 PM ET', status: 'upcoming' },
+            { id: 3, away: 'PHI', home: 'BAL', date: '2024-12-01', time: '4:25 PM ET', status: 'upcoming' },
+            { id: 4, away: 'SF', home: 'BUF', date: '2024-12-01', time: '8:20 PM ET', status: 'upcoming' },
+            { id: 5, away: 'DAL', home: 'NYG', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 6, away: 'PIT', home: 'CIN', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 7, away: 'HOU', home: 'JAX', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 8, away: 'SEA', home: 'NYJ', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 9, away: 'LAC', home: 'ATL', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 10, away: 'IND', home: 'NE', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 11, away: 'ARI', home: 'MIN', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+            { id: 12, away: 'TEN', home: 'WAS', date: '2024-12-01', time: '1:00 PM ET', status: 'upcoming' },
+        ];
+        
+        // Team Full Names
+        const TEAM_NAMES = {
+            'ARI': 'Cardinals', 'ATL': 'Falcons', 'BAL': 'Ravens', 'BUF': 'Bills',
+            'CAR': 'Panthers', 'CHI': 'Bears', 'CIN': 'Bengals', 'CLE': 'Browns',
+            'DAL': 'Cowboys', 'DEN': 'Broncos', 'DET': 'Lions', 'GB': 'Packers',
+            'HOU': 'Texans', 'IND': 'Colts', 'JAX': 'Jaguars', 'KC': 'Chiefs',
+            'LV': 'Raiders', 'LAC': 'Chargers', 'LAR': 'Rams', 'MIA': 'Dolphins',
+            'MIN': 'Vikings', 'NE': 'Patriots', 'NO': 'Saints', 'NYG': 'Giants',
+            'NYJ': 'Jets', 'PHI': 'Eagles', 'PIT': 'Steelers', 'SF': '49ers',
+            'SEA': 'Seahawks', 'TB': 'Buccaneers', 'TEN': 'Titans', 'WSH': 'Commanders'
+        };
+        
+        // Current selected game
+        let currentGame = NFL_SCHEDULE[0];
+        
+        // Player Stats Database
+        const PLAYER_STATS = {
+            "Bo Nix": { position: "QB", team: "DEN", games: 16, pass_yds: 3775, pass_l5: 245, rush_yds: 430, rush_l5: 28, pass_att: 567, att_l5: 35, tds: 29, epa: 0.12, hasStats: true },
+            "RJ Harvey": { position: "RB", team: "DEN", games: 8, rush_yds: 285, rush_l5: 52, rush_att: 62, att_l5: 11, opp_share: 35, yco: 2.8, hasStats: true },
+            "Jaleel McLaughlin": { position: "RB", team: "DEN", games: 16, rush_yds: 410, rush_l5: 30, rush_att: 95, att_l5: 7, opp_share: 25, yco: 2.4, hasStats: true },
+            "Courtland Sutton": { position: "WR", team: "DEN", games: 16, rec_yds: 1081, rec_l5: 68, receptions: 81, rec_l5_cnt: 5, tgt_share: 23.8, adot: 12.5, hasStats: true },
+            "Marvin Mims Jr.": { position: "WR", team: "DEN", games: 16, rec_yds: 620, rec_l5: 45, receptions: 42, rec_l5_cnt: 3, tgt_share: 12, adot: 15.8, hasStats: true },
+            "Troy Franklin": { position: "WR", team: "DEN", games: 14, rec_yds: 320, rec_l5: 32, receptions: 28, rec_l5_cnt: 2.5, tgt_share: 8, adot: 10.5, hasStats: true },
+            "Adam Trautman": { position: "TE", team: "DEN", games: 16, rec_yds: 280, rec_l5: 20, receptions: 32, rec_l5_cnt: 2.2, tgt_share: 8.5, adot: 7.5, hasStats: true },
+            "Marcus Mariota": { position: "QB", team: "WSH", games: 3, pass_yds: 485, pass_l5: 165, rush_yds: 95, rush_l5: 32, pass_att: 68, att_l5: 24, tds: 3, epa: 0.05, hasStats: true },
+            "Brian Robinson Jr.": { position: "RB", team: "WSH", games: 13, rush_yds: 658, rush_l5: 55, rush_att: 178, att_l5: 15, opp_share: 52, yco: 2.6, hasStats: true },
+            "Austin Ekeler": { position: "RB", team: "WSH", games: 14, rush_yds: 320, rush_l5: 28, rush_att: 85, att_l5: 7, opp_share: 28, yco: 2.2, hasStats: true },
+            "Terry McLaurin": { position: "WR", team: "WSH", games: 16, rec_yds: 1096, rec_l5: 72, receptions: 82, rec_l5_cnt: 5.5, tgt_share: 24.4, adot: 13.2, hasStats: true },
+            "Dyami Brown": { position: "WR", team: "WSH", games: 16, rec_yds: 315, rec_l5: 25, receptions: 25, rec_l5_cnt: 2, tgt_share: 8.8, adot: 14.5, hasStats: true },
+            "Olamide Zaccheaus": { position: "WR", team: "WSH", games: 15, rec_yds: 385, rec_l5: 30, receptions: 35, rec_l5_cnt: 2.8, tgt_share: 11.5, adot: 9.8, hasStats: true },
+            "Zach Ertz": { position: "TE", team: "WSH", games: 15, rec_yds: 520, rec_l5: 38, receptions: 58, rec_l5_cnt: 4.2, tgt_share: 16.3, adot: 7.8, hasStats: true },
+            "Jarrett Stidham": { position: "QB", team: "DEN", games: 0, hasStats: false },
+            "Jeff Driskel": { position: "QB", team: "WSH", games: 0, hasStats: false },
+            "Tyler Badie": { position: "RB", team: "DEN", games: 0, hasStats: false },
+            "Audric Estime": { position: "RB", team: "DEN", games: 0, hasStats: false },
+            "Jeremy McNichols": { position: "RB", team: "WSH", games: 0, hasStats: false },
+            "Lil'Jordan Humphrey": { position: "WR", team: "DEN", games: 0, hasStats: false },
+            "Noah Brown": { position: "WR", team: "WSH", games: 0, hasStats: false },
+            "Lucas Krull": { position: "TE", team: "DEN", games: 0, hasStats: false },
+            "John Bates": { position: "TE", team: "WSH", games: 0, hasStats: false },
+        };
+        
+        // App State
+        let selectedPlayers = [];
+        let projections = {};
+        let parlayLegs = [];
+        let favoriteTeam = localStorage.getItem('nfl_favorite_team') || '';
+        let lastUpdated = localStorage.getItem('nfl_last_updated') || null;
+        
+        // Config
+        const CONFIG = {
+            L5_WEIGHT: 0.65,
+            SEASON_WEIGHT: 0.35,
+            ELITE_DEF: [1, 5],
+            ELITE_DAMPER: 0.88,
+            POOR_DEF: [28, 32],
+            POOR_BOOST: 1.12,
+            EPA_THRESHOLD: 0.20,
+            EPA_BOOST: 1.05,
+            TGT_THRESHOLD: 28,
+            VOL_BOOST: 1.08
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFavoriteTeam();
+            populateGameSelector();
+            renderPlayerGrid();
+            setupSliders();
+            updateAnalysis();
+            updateLastUpdated();
+        });
+        
+        // Populate game selector dropdown
+        function populateGameSelector() {
+            const selector = document.getElementById('game-selector');
+            selector.innerHTML = NFL_SCHEDULE.map(game => {
+                const isFav = game.away === favoriteTeam || game.home === favoriteTeam;
+                const star = isFav ? '⭐ ' : '';
+                return `<option value="${game.id}" ${game.id === currentGame.id ? 'selected' : ''}>
+                    ${star}${game.away} @ ${game.home} • ${game.time}
+                </option>`;
+            }).join('');
+            
+            // Auto-select favorite team's game if available
+            if (favoriteTeam) {
+                const favGame = NFL_SCHEDULE.find(g => g.away === favoriteTeam || g.home === favoriteTeam);
+                if (favGame) {
+                    selector.value = favGame.id;
+                    selectGame();
+                }
+            }
+        }
+        
+        // Select a game
+        function selectGame() {
+            const selector = document.getElementById('game-selector');
+            const gameId = parseInt(selector.value);
+            currentGame = NFL_SCHEDULE.find(g => g.id === gameId) || NFL_SCHEDULE[0];
+            
+            // Update spread label
+            document.getElementById('spread-team').textContent = currentGame.home;
+            
+            // Update team filter options
+            const teamFilter = document.getElementById('team-filter');
+            teamFilter.innerHTML = `
+                <option value="all">Both Teams</option>
+                <option value="${currentGame.away}">${currentGame.away} ${TEAM_NAMES[currentGame.away]}</option>
+                <option value="${currentGame.home}">${currentGame.home} ${TEAM_NAMES[currentGame.home]}</option>
+            `;
+            
+            // Clear selections for new game
+            selectedPlayers = [];
+            projections = {};
+            parlayLegs = [];
+            
+            renderPlayerGrid();
+            renderStats();
+            showToast(`Selected: ${currentGame.away} @ ${currentGame.home}`);
+        }
+        
+        // Load favorite team from localStorage
+        function loadFavoriteTeam() {
+            const favSelect = document.getElementById('favorite-team');
+            const favStar = document.getElementById('fav-star');
+            
+            if (favoriteTeam) {
+                favSelect.value = favoriteTeam;
+                favStar.textContent = '⭐';
+                favStar.classList.add('active');
+            }
+        }
+        
+        // Save favorite team
+        function saveFavoriteTeam() {
+            const favSelect = document.getElementById('favorite-team');
+            const favStar = document.getElementById('fav-star');
+            
+            favoriteTeam = favSelect.value;
+            localStorage.setItem('nfl_favorite_team', favoriteTeam);
+            
+            if (favoriteTeam) {
+                favStar.textContent = '⭐';
+                favStar.classList.add('active');
+                showToast(`${TEAM_NAMES[favoriteTeam] || favoriteTeam} saved as favorite!`);
+            } else {
+                favStar.textContent = '☆';
+                favStar.classList.remove('active');
+            }
+            
+            populateGameSelector();
+        }
+        
+        // Toggle favorite
+        function toggleFavorite() {
+            const favSelect = document.getElementById('favorite-team');
+            if (favSelect.value) {
+                saveFavoriteTeam();
+            }
+        }
+        
+        // Refresh data
+        async function refreshData() {
+            const btn = document.getElementById('refresh-btn');
+            const icon = document.getElementById('refresh-icon');
+            
+            btn.classList.add('loading');
+            icon.classList.add('spinner');
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Update timestamp
+            const now = new Date();
+            lastUpdated = now.toISOString();
+            localStorage.setItem('nfl_last_updated', lastUpdated);
+            updateLastUpdated();
+            
+            btn.classList.remove('loading');
+            icon.classList.remove('spinner');
+            
+            showToast('Data refreshed! Roster & schedule updated.');
+        }
+        
+        // Update last updated display
+        function updateLastUpdated() {
+            const el = document.getElementById('last-updated');
+            if (lastUpdated) {
+                const date = new Date(lastUpdated);
+                el.textContent = `Last updated: ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            } else {
+                el.textContent = 'Last updated: Never';
+            }
+        }
+        
+        function renderPlayerGrid() {
+            const grid = document.getElementById('player-grid');
+            const filter = document.getElementById('team-filter').value;
+            
+            grid.innerHTML = '';
+            
+            // Only show players from current game's teams
+            const gameTeams = [currentGame.away, currentGame.home];
+            
+            Object.entries(PLAYER_STATS).forEach(([name, stats]) => {
+                // First filter by current game's teams
+                if (!gameTeams.includes(stats.team)) return;
+                // Then apply team filter if not 'all'
+                if (filter !== 'all' && stats.team !== filter) return;
+                
+                const isSelected = selectedPlayers.includes(name);
+                const isFavTeam = stats.team === favoriteTeam;
+                const div = document.createElement('div');
+                div.className = `player-option ${isSelected ? 'selected' : ''}`;
+                div.onclick = () => togglePlayer(name);
+                
+                div.innerHTML = `
+                    <div class="player-checkbox"></div>
+                    <div class="player-info">
+                        <div class="player-name">${isFavTeam ? '⭐ ' : ''}${name}</div>
+                        <div class="player-meta">${stats.position} • ${stats.team} ${stats.hasStats ? '<span class="has-stats">✓</span>' : ''}</div>
+                    </div>
+                `;
+                
+                grid.appendChild(div);
+            });
+        }
+        
+        function filterPlayers() {
+            renderPlayerGrid();
+        }
+        
+        function togglePlayer(name) {
+            const idx = selectedPlayers.indexOf(name);
+            if (idx > -1) {
+                selectedPlayers.splice(idx, 1);
+            } else if (selectedPlayers.length < 6) {
+                selectedPlayers.push(name);
+            } else {
+                showToast('Maximum 6 players allowed');
+                return;
+            }
+            
+            renderPlayerGrid();
+            renderStats();
+        }
+        
+        function setupSliders() {
+            const spreadSlider = document.getElementById('spread');
+            const totalSlider = document.getElementById('total');
+            
+            spreadSlider.oninput = () => {
+                document.getElementById('spread-value').textContent = parseFloat(spreadSlider.value).toFixed(1);
+                updateAnalysis();
+            };
+            
+            totalSlider.oninput = () => {
+                document.getElementById('total-value').textContent = parseFloat(totalSlider.value).toFixed(1);
+                updateAnalysis();
+            };
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            document.querySelector(`.tab-content#tab-${tabName}`).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function renderStats() {
+            const container = document.getElementById('stats-container');
+            
+            if (selectedPlayers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👈</div>
+                        <p>Select players from the sidebar to view their stats</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = selectedPlayers.map(name => {
+                const stats = PLAYER_STATS[name];
+                if (!stats.hasStats) {
+                    return `
+                        <div class="player-card">
+                            <div class="player-card-header">
+                                <div>
+                                    <div class="player-card-pos">${stats.position} • ${stats.team}</div>
+                                    <div class="player-card-name">${name}</div>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-secondary);">No pre-loaded stats available</p>
+                        </div>
+                    `;
+                }
+                
+                let statsHtml = '';
+                if (stats.position === 'QB') {
+                    statsHtml = `
+                        <div class="stat-item"><div class="stat-value">${stats.pass_l5}</div><div class="stat-label">Pass Yds/G (L5)</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.pass_yds.toLocaleString()}</div><div class="stat-label">Season Pass Yds</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.tds}</div><div class="stat-label">TDs</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.epa}</div><div class="stat-label">EPA/Play</div></div>
+                    `;
+                } else if (stats.position === 'RB') {
+                    statsHtml = `
+                        <div class="stat-item"><div class="stat-value">${stats.rush_l5}</div><div class="stat-label">Rush Yds/G (L5)</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.rush_yds.toLocaleString()}</div><div class="stat-label">Season Rush Yds</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.opp_share}%</div><div class="stat-label">Opp Share</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.yco}</div><div class="stat-label">YCO/Att</div></div>
+                    `;
+                } else {
+                    statsHtml = `
+                        <div class="stat-item"><div class="stat-value">${stats.rec_l5}</div><div class="stat-label">Rec Yds/G (L5)</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.rec_yds.toLocaleString()}</div><div class="stat-label">Season Rec Yds</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.tgt_share}%</div><div class="stat-label">Target Share</div></div>
+                        <div class="stat-item"><div class="stat-value">${stats.adot}</div><div class="stat-label">aDOT</div></div>
+                    `;
+                }
+                
+                return `
+                    <div class="player-card">
+                        <div class="player-card-header">
+                            <div>
+                                <div class="player-card-pos">${stats.position} • ${stats.team}</div>
+                                <div class="player-card-name">${name}</div>
+                            </div>
+                            <div style="text-align: right; font-size: 0.85rem; color: var(--text-secondary);">
+                                ${stats.games} games played
+                            </div>
+                        </div>
+                        <div class="stats-grid">${statsHtml}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function calculateProjection(l5Avg, seasonTotal, games, oppRank, efficiencyMod = 1.0) {
+            const seasonAvg = games > 0 ? seasonTotal / games : l5Avg;
+            let base = CONFIG.L5_WEIGHT * l5Avg + CONFIG.SEASON_WEIGHT * seasonAvg;
+            
+            let oppMod = 1.0;
+            if (oppRank >= CONFIG.ELITE_DEF[0] && oppRank <= CONFIG.ELITE_DEF[1]) {
+                oppMod = CONFIG.ELITE_DAMPER;
+            } else if (oppRank >= CONFIG.POOR_DEF[0] && oppRank <= CONFIG.POOR_DEF[1]) {
+                oppMod = CONFIG.POOR_BOOST;
+            }
+            
+            return Math.round(base * oppMod * efficiencyMod * 10) / 10;
+        }
+        
+        function generateProjections() {
+            if (selectedPlayers.length === 0) {
+                showToast('Select players first');
+                return;
+            }
+            
+            const denRank = parseInt(document.getElementById('den-rank').value);
+            const wshRank = parseInt(document.getElementById('wsh-rank').value);
+            
+            projections = {};
+            
+            selectedPlayers.forEach(name => {
+                const stats = PLAYER_STATS[name];
+                if (!stats.hasStats) return;
+                
+                const oppRank = stats.team === 'DEN' ? wshRank : denRank;
+                
+                if (stats.position === 'QB') {
+                    const epaMod = stats.epa > CONFIG.EPA_THRESHOLD ? CONFIG.EPA_BOOST : 1.0;
+                    const passProj = calculateProjection(stats.pass_l5, stats.pass_yds, stats.games, oppRank, epaMod);
+                    const rushProj = calculateProjection(stats.rush_l5, stats.rush_yds, stats.games, oppRank);
+                    const attProj = calculateProjection(stats.att_l5, stats.pass_att, stats.games, oppRank);
+                    projections[name] = {
+                        pass_yds: { proj: passProj, floor: Math.round(passProj * 0.75), ceiling: Math.round(passProj * 1.25), confidence: 72 },
+                        rush_yds: { proj: rushProj, floor: Math.round(rushProj * 0.6), ceiling: Math.round(rushProj * 1.5), confidence: 58 },
+                        pass_att: { proj: attProj, floor: Math.round(attProj * 0.8), ceiling: Math.round(attProj * 1.2), confidence: 78 },
+                        pass_tds: { proj: Math.round(stats.tds / stats.games * 10) / 10, floor: 0, ceiling: 3, confidence: 45 }
+                    };
+                } else if (stats.position === 'RB') {
+                    const rushProj = calculateProjection(stats.rush_l5, stats.rush_yds, stats.games, oppRank);
+                    const attProj = calculateProjection(stats.att_l5, stats.rush_att, stats.games, oppRank);
+                    projections[name] = {
+                        rush_yds: { proj: rushProj, floor: Math.round(rushProj * 0.5), ceiling: Math.round(rushProj * 1.6), confidence: 62 },
+                        rush_att: { proj: attProj, floor: Math.round(attProj * 0.7), ceiling: Math.round(attProj * 1.4), confidence: 70 },
+                        ypc: { proj: Math.round(stats.yco * 1.5 * 10) / 10, floor: 2.5, ceiling: 6.5, confidence: 55 }
+                    };
+                } else {
+                    const tgtMod = stats.tgt_share > CONFIG.TGT_THRESHOLD ? CONFIG.VOL_BOOST : 1.0;
+                    const recProj = calculateProjection(stats.rec_l5, stats.rec_yds, stats.games, oppRank, tgtMod);
+                    const catchProj = calculateProjection(stats.rec_l5_cnt, stats.receptions, stats.games, oppRank);
+                    projections[name] = {
+                        rec_yds: { proj: recProj, floor: Math.round(recProj * 0.4), ceiling: Math.round(recProj * 1.7), confidence: 60 },
+                        receptions: { proj: catchProj, floor: Math.round(catchProj * 0.5), ceiling: Math.round(catchProj * 1.6), confidence: 65 },
+                        targets: { proj: Math.round(catchProj * 1.3), floor: Math.round(catchProj * 0.8), ceiling: Math.round(catchProj * 2), confidence: 68 }
+                    };
+                }
+            });
+            
+            renderProjections();
+            renderParlayOptions();
+            showToast('Projections generated!');
+        }
+        
+        function renderProjections() {
+            const container = document.getElementById('projections-container');
+            
+            if (Object.keys(projections).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>Select players and click "Generate Projections"</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const labels = {
+                pass_yds: 'Passing Yards',
+                rush_yds: 'Rush Yards',
+                pass_att: 'Pass Attempts',
+                pass_tds: 'Passing TDs',
+                rush_att: 'Rush Attempts',
+                ypc: 'Yards/Carry',
+                rec_yds: 'Rec Yards',
+                receptions: 'Receptions',
+                targets: 'Targets'
+            };
+            
+            container.innerHTML = Object.entries(projections).map(([name, props]) => {
+                const stats = PLAYER_STATS[name];
+                
+                const rows = Object.entries(props).map(([key, data]) => {
+                    const confClass = data.confidence >= 70 ? 'confidence-high' : data.confidence >= 55 ? 'confidence-med' : 'confidence-low';
+                    
+                    return `
+                        <div class="projection-row">
+                            <div class="projection-stat">${labels[key]}</div>
+                            <div class="projection-value" style="font-size: 1.25rem; color: var(--accent);">${data.proj}</div>
+                            <div class="projection-range" style="font-size: 0.8rem; color: var(--text-secondary);">Range: ${data.floor} - ${data.ceiling}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="projection-card">
+                        <div class="projection-header">
+                            <div>
+                                <div class="projection-player">${name}</div>
+                                <div class="projection-pos">${stats.position} • ${stats.team}</div>
+                            </div>
+                        </div>
+                        ${rows}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateLine(name, prop, value) {
+            projections[name][prop].line = parseFloat(value);
+            renderProjections();
+            renderParlayOptions();
+        }
+        
+        function renderParlayOptions() {
+            const container = document.getElementById('parlay-options');
+            
+            if (Object.keys(projections).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Generate projections first to build your picks</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const labels = {
+                pass_yds: 'Pass Yds',
+                rush_yds: 'Rush Yds',
+                pass_att: 'Pass Att',
+                pass_tds: 'Pass TDs',
+                rush_att: 'Rush Att',
+                ypc: 'Yards/Carry',
+                rec_yds: 'Rec Yds',
+                receptions: 'Receptions',
+                targets: 'Targets'
+            };
+            
+            container.innerHTML = Object.entries(projections).map(([name, props]) => {
+                const options = Object.entries(props).map(([key, data]) => {
+                    const legId = `${name}-${key}`;
+                    const isSelected = parlayLegs.some(l => l.id === legId);
+                    const confClass = data.confidence >= 70 ? 'confidence-high' : data.confidence >= 55 ? 'confidence-med' : 'confidence-low';
+                    
+                    return `
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center;">
+                            <button class="btn ${isSelected ? 'btn-primary' : 'btn-secondary'}" style="flex: 1;" onclick="toggleParlayLeg('${name}', '${key}', 'projection')">
+                                ${labels[key]}: <strong>${data.proj}</strong> <span style="font-size: 0.75rem; opacity: 0.7;">(${data.floor}-${data.ceiling})</span>
+                            </button>
+                            <span style="font-size: 0.75rem; min-width: 45px; text-align: right;" class="${confClass.replace('confidence-', '')}">${data.confidence}%</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 0.75rem;">${name} (${PLAYER_STATS[name].position})</h4>
+                        ${options}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleParlayLeg(name, prop, direction) {
+            const legId = `${name}-${prop}`;
+            const idx = parlayLegs.findIndex(l => l.id === legId);
+            
+            if (idx > -1) {
+                parlayLegs.splice(idx, 1);
+            } else {
+                const data = projections[name][prop];
+                
+                parlayLegs.push({
+                    id: legId,
+                    name,
+                    prop,
+                    proj: data.proj,
+                    floor: data.floor,
+                    ceiling: data.ceiling,
+                    confidence: data.confidence
+                });
+            }
+            
+            renderParlayOptions();
+            renderParlaySlip();
+        }
+        
+        function renderParlaySlip() {
+            const slip = document.getElementById('parlay-slip');
+            const legsContainer = document.getElementById('parlay-legs');
+            
+            if (parlayLegs.length === 0) {
+                slip.style.display = 'none';
+                return;
+            }
+            
+            slip.style.display = 'block';
+            
+            const labels = {
+                pass_yds: 'Pass Yds',
+                rush_yds: 'Rush Yds',
+                pass_att: 'Pass Att',
+                pass_tds: 'Pass TDs',
+                rush_att: 'Rush Att',
+                ypc: 'Yards/Carry',
+                rec_yds: 'Rec Yds',
+                receptions: 'Receptions',
+                targets: 'Targets'
+            };
+            
+            legsContainer.innerHTML = parlayLegs.map(leg => {
+                const confClass = leg.confidence >= 70 ? 'high' : leg.confidence >= 55 ? 'med' : 'low';
+                return `
+                <div class="parlay-leg">
+                    <div class="parlay-leg-info">
+                        <div class="parlay-leg-player">${leg.name}</div>
+                        <div class="parlay-leg-prop">${labels[leg.prop]}: ${leg.proj} <span style="opacity: 0.7;">(${leg.floor}-${leg.ceiling})</span></div>
+                    </div>
+                    <div class="parlay-leg-edge ${confClass}">${leg.confidence}%</div>
+                </div>
+            `}).join('');
+            
+            const avgConfidence = parlayLegs.length > 0 ? Math.round(parlayLegs.reduce((sum, leg) => sum + leg.confidence, 0) / parlayLegs.length) : 0;
+            
+            document.getElementById('parlay-legs-count').textContent = parlayLegs.length;
+            document.getElementById('parlay-edge').textContent = `${avgConfidence}%`;
+            document.getElementById('parlay-edge').style.color = avgConfidence >= 65 ? 'var(--success)' : avgConfidence >= 50 ? 'var(--warning)' : 'var(--danger)';
+        }
+        
+        function clearParlay() {
+            parlayLegs = [];
+            renderParlayOptions();
+            renderParlaySlip();
+        }
+        
+        function updateAnalysis() {
+            const spread = parseFloat(document.getElementById('spread').value);
+            const total = parseFloat(document.getElementById('total').value);
+            
+            const denImplied = (total - spread) / 2;
+            const wshImplied = (total + spread) / 2;
+            
+            document.getElementById('analysis-spread').textContent = `WSH ${spread > 0 ? '+' : ''}${spread}`;
+            document.getElementById('analysis-total').textContent = total;
+            document.getElementById('analysis-den-implied').textContent = denImplied.toFixed(1);
+            document.getElementById('analysis-wsh-implied').textContent = wshImplied.toFixed(1);
+            
+            let script = '⚪ Neutral Script - Balanced game expected';
+            if (spread > 6.5) {
+                script = '🔴 Trailing Script - Denver likely playing from behind, positive for passing';
+            } else if (spread < -6.5) {
+                script = '🟢 Leading Script - Denver likely leading, positive for rushing';
+            } else if (total > 49.5) {
+                script = '🟡 Explosive Game - High-scoring expected, stack skill positions';
+            }
+            
+            document.getElementById('script-indicator').textContent = script;
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
