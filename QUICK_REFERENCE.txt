@@ -1,0 +1,73 @@
+╔════════════════════════════════════════════════════════════════════╗
+║          NFL PARLAY GENERATOR PRO - QUICK REFERENCE CARD          ║
+╚════════════════════════════════════════════════════════════════════╝
+
+🚀 TO LAUNCH:
+   Double-click "NFL Parlay Generator Pro" icon on your desktop!
+
+📋 QUICK WORKFLOW:
+   1. Select game from schedule → Click "Load Game ➜"
+   2. Click "💾 Save Game Context" after reviewing metrics
+   3. Add players with "➕ Add Player" button
+   4. Click "🎯 Generate Parlay Predictions"
+
+ℹ️ CONFIDENCE SCORES:
+   🟢 80%+ = Great! Use this data
+   🟡 60-79% = Good, acceptable
+   🟠 <60% = ⚠️ WARNING - Click ℹ to update manually
+
+📊 WHERE TO FIND METRICS:
+   Click ANY ℹ button next to a metric to see:
+   • What the metric means
+   • Step-by-step Google search instructions
+   • Quick links to data sources
+   • Manual entry form
+
+🎙️ TONY ROMO ANALYSIS:
+   Auto-generates after you save game context
+   Shows matchup strengths in plain English
+   Click ℹ to see how narrative was calculated
+
+💡 PRO TIPS:
+   • You can add players from BOTH teams
+   • Orange borders = needs attention
+   • Combined probability >40% = strong play
+   • Always verify with your own research
+
+🔗 DATA SOURCES:
+   RBSDM.com - EPA statistics (FREE)
+   FootballOutsiders.com - DVOA rankings
+   NextGenStats.nfl.com - Advanced metrics
+
+📱 API OPTIONS (for developers):
+   • The Odds API - Live betting lines
+   • NFLData Python Package - Historical data
+   • ESPN Hidden API - Schedules & teams
+   (See PRO_USER_GUIDE.md for details)
+
+⚙️ CUSTOMIZATION:
+   Edit NFL_GUI_Pro.py to:
+   • Change default team theme (line 46)
+   • Adjust confidence thresholds (line 195)
+   • Add new stat types (line 477)
+
+🐛 TROUBLESHOOTING:
+   App won't start?
+   → Check Python installed: python --version
+   → Right-click launch_pro.bat → Run as Admin
+
+   Schedule not loading?
+   → Click "🔄 Refresh Games"
+   → Manual entry still works!
+
+   Wrong values?
+   → Click ℹ to manually update any metric
+
+⚖️ REMEMBER:
+   This is for ENTERTAINMENT & EDUCATION only
+   Not financial advice • Gamble responsibly
+   Always verify data independently
+
+════════════════════════════════════════════════════════════════════
+Version: 1.0 Pro | NFL Season 2024 | Good luck! 🏈
+════════════════════════════════════════════════════════════════════

@@ -1,0 +1,72 @@
+========================================
+🏈 NFL PARLAY PRO - QUICK REFERENCE
+========================================
+
+HOW TO LAUNCH:
+--------------
+1. Double-click "NFL Parlay Pro" icon on your desktop
+2. Or double-click "launch_pro_desktop.bat" 
+3. Or run: python NFL_Parlay_Pro_Desktop.py
+
+WORKFLOW:
+---------
+Tab 1 → Tab 2 → Tab 3
+
+TAB 1 - GAME SETUP:
+-------------------
+1. Select game from dropdown
+2. Click "Load Game"
+3. Verify/edit metrics
+4. Click info (ℹ️) buttons if you need help finding data
+5. Click "✓ Save Game Context"
+
+TAB 2 - PLAYER SELECTION:
+-------------------------
+1. Select team from "Load Roster For" dropdown
+2. Click "Load Roster"
+3. Click player names to add them
+4. Repeat for both teams
+5. Review selected players list
+
+TAB 3 - GENERATE:
+----------------
+1. Click "🚀 Generate Predictions"
+2. Read Tony Romo narrative
+3. Review player projections
+4. Check confidence scores
+5. Review recommended parlays
+
+KEY FEATURES:
+------------
+✓ No popups - everything in one window
+✓ Light gray background (easy on eyes)
+✓ Dynamic team colors
+✓ Confidence scores on all metrics
+✓ Orange borders = <60% confidence
+✓ Info buttons explain data sources
+✓ Tony Romo-style analysis
+
+WHERE TO FIND METRICS:
+---------------------
+EPA: rbsdm.com, nfeloapp.com
+DVOA: footballoutsiders.com, sharpfootballstats.com
+Lines: draftkings.com, fanduel.com, oddsshark.com
+
+CONFIDENCE SCORES:
+-----------------
+85%+ = Excellent (Green)
+70-84% = Good
+60-69% = Moderate  
+<60% = Low (Orange border)
+
+PRO TIPS:
+---------
+• Load games from Tab 1 dropdown for auto-fill
+• Click ℹ️ buttons to learn where to find data
+• Select 3-5 players for optimal parlay odds
+• Mix QB + WR from same team for correlation
+• Read narrative for game script insights
+• Check orange-bordered metrics carefully
+
+For detailed guide: See PRO_DESKTOP_README.md
+========================================

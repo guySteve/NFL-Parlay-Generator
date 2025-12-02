@@ -1,49 +1,56 @@
 # 🏈 NFL Parlay Generator
 
-A predictive analytics and projection builder for NFL player props. Features a modern web interface with pure projections, favorite team tracking, and multi-game support.
+A professional-grade NFL predictive analytics system that generates correlated parlays using Sharp betting data (EPA, DVOA, Target Share) through a weighted predictive engine.
 
-![NFL Parlay Generator](https://img.shields.io/badge/NFL-Parlay%20Generator-00d4aa?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+## 🎯 Features
 
-## ✨ Features
-
-### Web App (`NFL_app.html`)
-- **Pure Projections** - Model-based projections with floor/ceiling ranges and confidence scores
-- **Favorite Team** - Save your team to localStorage, auto-selects their games
-- **Game Selector** - Switch between multiple NFL matchups
-- **Player Stats Dashboard** - View detailed stats for QBs, RBs, WRs, and TEs
-- **Pick Builder** - Build your selection slate with confidence tracking
-- **Analysis Tab** - Game script analysis and correlation guides
-- **PWA Ready** - Installable as a Progressive Web App
-
-### Console App (`NFL_pre.py`)
-- **Rich TUI** - Beautiful terminal interface with Rich library
-- **Weighted Projections** - L5 (65%) + Season (35%) weighted model
-- **DVOA Modifiers** - Defense-adjusted projections
-- **Correlation Engine** - Identifies correlated player props
-- **Pre-loaded Stats** - Auto-fill from NFL.com data
+- **🔴 Live NFL Schedule**: Automatically fetches today's games and upcoming matchups from ESPN API
+- **🖥️ Desktop GUI Application**: User-friendly form-based interface with tabbed navigation
+- **📊 Weighted Recency Model**: Combines last 5 games (65%) with season averages (35%)
+- **🛡️ DVOA Opponent Adjustments**: Modifies projections based on defensive strength
+- **⚡ Efficiency Modifiers**: EPA, CPOE, Target Share, Air Yards integration
+- **🎮 Game Script Analysis**: Identifies Trailing, Leading, and Explosive scenarios
+- **🔗 Correlation Engine**: Builds multi-leg parlays based on expected game flow
+- **📦 Pre-loaded Player Stats**: 2024 season data from NFL.com
 
 ## 🚀 Quick Start
 
-### Web App (No Dependencies!)
-```bash
-# Start a local server
-python -m http.server 8000
+### Prerequisites
 
-# Open in browser
-http://localhost:8000/NFL_app.html
+```bash
+pip install pydantic rich requests pytz
 ```
 
-### Console App
-```bash
-# Install dependencies
-pip install rich pydantic
+### Run the Desktop GUI
 
-# Run the app
-python NFL_pre.py
+```bash
+python NFL_GUI.py
 ```
+
+The GUI will automatically load today's NFL games from ESPN API on startup!
+
+### GUI Workflow
+
+1. **Tab 1 - Game Setup**: 
+   - 🔴 View today's games loaded automatically from ESPN
+   - Select any game from the dropdown
+   - Auto-populates spread, total, and team info
+   - Or enter custom game details manually
+
+2. **Tab 2 - Add Players**:
+   - Select from pre-loaded rosters (Broncos/Commanders/etc)
+   - ✓ Auto-fill stats from NFL.com data (green checkmarks)
+   - Add custom players manually
+   - Edit or delete players with buttons
+
+3. **Tab 3 - Review & Generate**:
+   - Review all entered data
+   - 🚀 Generate projections with one click
+
+4. **Tab 4 - Results**:
+   - View projection table with edges
+   - See correlated parlay recommendations
+   - Identify best individual plays
 
 ## 📊 Projection Model
 
@@ -69,23 +76,92 @@ The projection engine uses a weighted average approach:
 
 ```
 NFL-Parlay-Generator/
-├── NFL_app.html      # Web interface (PWA)
-├── NFL_pre.py        # Console application
-├── manifest.json     # PWA manifest
-└── README.md
+├── NFL_GUI.py           # 🖥️ Desktop GUI application (RECOMMENDED)
+├── NFL_pre.py           # 💻 Console/terminal application
+├── nfl_schedule.py      # 📡 Live schedule fetcher (ESPN API)
+├── NFL_app.html         # 🌐 Web interface (legacy)
+├── README.md            # 📖 Documentation
+└── manifest.json        # 📦 Project metadata
+```
+
+## 📡 Live Schedule API
+
+The schedule fetcher automatically pulls:
+- ✅ Today's games with odds/lines
+- 🌙 Tonight's primetime matchups  
+- 📅 Upcoming games for next 7 days
+- ⚡ Real-time game status (pre-game, in-progress, final)
+
+Test it standalone:
+```bash
+python nfl_schedule.py
+```
+
+Use it programmatically:
+```python
+from nfl_schedule import NFLScheduleFetcher
+
+fetcher = NFLScheduleFetcher()
+tonight = fetcher.get_tonights_game()
+upcoming = fetcher.get_upcoming_games(days=7)
+
+# Today it found:
+# 🔴 Giants @ Patriots (Mon Night Football, 8:15 PM ET)
+# Spread: -7.5 | O/U: 46.5
 ```
 
 ## 🔧 Configuration
 
 ### Favorite Team
-Your favorite team is saved to `localStorage` and persists between sessions. Games featuring your team are highlighted with ⭐.
+In the web app, your favorite team is saved to `localStorage` and persists between sessions.
 
 ### Model Weights
-Edit the `CONFIG` object in the JavaScript or Python file to adjust:
-- `L5_WEIGHT` - Weight for last 5 games (default: 0.65)
-- `SEASON_WEIGHT` - Weight for season average (default: 0.35)
-- `ELITE_DAMPER` - Multiplier vs top-5 defenses (default: 0.88)
-- `POOR_BOOST` - Multiplier vs bottom-5 defenses (default: 1.12)
+Edit the `Config` class in `NFL_pre.py` to adjust:
+```python
+LAST_5_WEIGHT = 0.65              # Recent form weight
+SEASON_AVG_WEIGHT = 0.35          # Season baseline weight
+ELITE_DEFENSE_DAMPER = 0.88       # Top 5 defense modifier
+POOR_DEFENSE_BOOST = 1.12         # Bottom 5 defense modifier
+QB_EPA_THRESHOLD = 0.20           # EPA threshold for boost
+WR_TARGET_SHARE_THRESHOLD = 28.0  # Volume floor threshold
+```
+
+## 🎓 Data Sources
+
+- **Player Stats**: NFL.com official statistics (2024 season) - pre-loaded
+- **Schedule/Odds**: ESPN API (live, auto-updated)
+- **Sharp Metrics**: EPA, CPOE, DVOA, Target Share, Air Yards
+- **Vegas Lines**: Manual entry (check DraftKings, FanDuel, BetMGM, etc.)
+
+## 💻 Alternative Interfaces
+
+### Console App (Terminal)
+For advanced users who prefer terminal:
+
+```bash
+python NFL_pre.py
+```
+
+Features:
+- Rich terminal UI with colored tables
+- Roster-based player selection
+- Auto-fill from pre-loaded stats
+- Review/edit before generation
+- Interactive navigation
+
+### Web App (Browser)
+Single-file HTML app:
+
+```bash
+python -m http.server 8000
+# Open http://localhost:8000/NFL_app.html
+```
+
+Features:
+- PWA installable
+- Favorite team tracking
+- Multi-game support
+- No backend required
 
 ## ⚠️ Disclaimer
 

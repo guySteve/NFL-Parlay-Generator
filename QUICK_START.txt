@@ -1,0 +1,110 @@
+🏈 NFL PARLAY GENERATOR - QUICK START GUIDE
+
+═══════════════════════════════════════════════════════════════
+
+✅ INSTALLATION COMPLETE!
+
+You now have a desktop icon: "NFL Parlay Generator"
+
+═══════════════════════════════════════════════════════════════
+
+📍 HOW TO LAUNCH:
+
+Option 1 (EASIEST):
+   → Look on your desktop
+   → Double-click "NFL Parlay Generator" icon
+   → App will open automatically!
+
+Option 2 (Manual):
+   → Open folder: C:\Users\smmoh\OneDrive\Documents\GitHub\NFL-Parlay-Generator
+   → Double-click "NFL_Launcher.pyw"
+
+Option 3 (Command Line):
+   → Open Command Prompt or PowerShell
+   → Run: python "C:\Users\smmoh\OneDrive\Documents\GitHub\NFL-Parlay-Generator\NFL_GUI.py"
+
+═══════════════════════════════════════════════════════════════
+
+🎮 HOW TO USE:
+
+1️⃣ LAUNCH THE APP
+   Double-click desktop icon
+
+2️⃣ TAB 1 - SELECT GAME
+   • App auto-loads today's NFL games
+   • Select a game from dropdown
+   • Click "Load Selected Game"
+   • Choose your team
+
+3️⃣ TAB 2 - ADD PLAYERS
+   • Select team from dropdown
+   • Pick players from roster
+   • Stats auto-fill (green ✓ = available)
+   • Add 4-6 players
+
+4️⃣ TAB 3 - REVIEW & GENERATE
+   • Review your data
+   • Click "🚀 GENERATE PROJECTIONS"
+
+5️⃣ TAB 4 - VIEW RESULTS
+   • See your projections table
+   • Get parlay recommendations
+   • Copy your picks!
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TROUBLESHOOTING:
+
+Problem: Icon doesn't work
+Solution: Make sure Python is installed
+         Run in Command Prompt: python --version
+
+Problem: "Module not found" error
+Solution: Install dependencies:
+         pip install pydantic rich requests pytz
+
+Problem: No games showing
+Solution: Check internet connection
+         Click "🔄 Refresh Games" button
+         Or use manual entry below
+
+Problem: App closes immediately
+Solution: Use launch_gui.bat instead (shows error messages)
+
+═══════════════════════════════════════════════════════════════
+
+📞 SUPPORT FILES:
+
+Desktop Icon:        NFL Parlay Generator.lnk
+Main App:           NFL_GUI.py
+Launcher (no console): NFL_Launcher.pyw
+Launcher (with console): launch_gui.bat
+Schedule Checker:   nfl_schedule.py
+
+═══════════════════════════════════════════════════════════════
+
+✨ FEATURES:
+
+🔴 Live NFL schedule from ESPN API
+📊 Weighted prediction model (L5 + Season)
+🎯 Game script correlation analysis
+📈 Edge calculations vs Vegas lines
+🎰 Multi-leg parlay recommendations
+✓ Auto-filled player stats
+
+═══════════════════════════════════════════════════════════════
+
+TODAY'S GAMES:
+Run on desktop to see live schedule!
+
+EXAMPLE OUTPUT:
+🔴 Giants @ Patriots - Tonight 8:15 PM ET
+   Spread: -7.5 | O/U: 46.5
+
+═══════════════════════════════════════════════════════════════
+
+🎉 ENJOY YOUR NFL PARLAY GENERATOR!
+
+Remember: For entertainment purposes only. Gamble responsibly!
+
+═══════════════════════════════════════════════════════════════

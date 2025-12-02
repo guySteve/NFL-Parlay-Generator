@@ -1,0 +1,169 @@
+🏈 NFL PARLAY GENERATOR PRO - QUICK START
+==========================================
+
+📍 YOU ARE HERE: Desktop Edition v2.0
+
+🚀 3-STEP SETUP
+===============
+
+STEP 1: Create Desktop Icon
+---------------------------
+Right-click > Run with PowerShell:
+    create_desktop_app_shortcut.ps1
+
+OR double-click:
+    launch_parlay_pro.bat
+
+
+STEP 2: Launch App
+------------------
+Double-click the new desktop icon:
+    "NFL Parlay Generator Pro"
+
+
+STEP 3: Generate Predictions
+-----------------------------
+1. Click "🔄 Refresh Schedule"
+2. Select today's game
+3. Click "Load Selected Game"
+4. Choose a team from dropdown
+5. Select players (Ctrl+Click for multiple)
+6. Click "➕ Add Selected Players"
+7. Click "🎯 Generate Predictions"
+8. Review confidence scores & narrative
+
+
+💡 KEY FEATURES
+===============
+
+✅ Live NFL Schedule from ESPN
+✅ Auto-loaded team rosters
+✅ Confidence scores (0-100%)
+✅ Orange borders = <60% confidence
+✅ Tony Romo-style narratives
+✅ Click "ℹ️" for data sources
+✅ Modern team-themed UI
+
+
+🔍 UNDERSTANDING CONFIDENCE
+===========================
+
+75-100%  = HIGH (green border)
+60-74%   = MODERATE (green border)
+Below 60 = LOW (orange border)
+
+
+📊 WHERE TO FIND STATS
+======================
+
+Click "ℹ️ Data Sources" on any prediction to see:
+
+• ESPN.com/NFL/Players
+• Pro-Football-Reference.com
+• NFL.com/Stats
+• FantasyPros.com
+• PFF.com (paid)
+
+
+🎯 PRO TIPS
+===========
+
+✓ Mix players from BOTH teams
+✓ Focus on >70% confidence predictions
+✓ Use narrative to validate game script
+✓ Orange borders = Double-check the data
+✓ Generate predictions for 5-8 players max
+
+
+⚠️ TROUBLESHOOTING
+==================
+
+"No games today"
+→ Check internet connection
+→ Click "🔄 Refresh Schedule"
+→ Load a manual game if needed
+
+"Players not loading"
+→ Make sure game is loaded first
+→ Check team dropdown selection
+
+"All predictions are orange"
+→ This is normal with default model
+→ Click "ℹ️" to see how to improve accuracy
+→ Consider integrating paid APIs
+
+
+📚 FULL DOCUMENTATION
+=====================
+
+See: README_DESKTOP_PRO.md
+
+
+🔌 API RECOMMENDATIONS
+=====================
+
+FREE:
+• ESPN API (already integrated)
+• The Odds API (500 calls/month)
+
+PAID (for better accuracy):
+• SportsDataIO ($50-500/mo)
+• PFF ($200+/year)
+• RapidAPI ($10-100/mo)
+
+
+⚡ QUICK COMMANDS
+=================
+
+Create Desktop Icon:
+    .\create_desktop_app_shortcut.ps1
+
+Launch App:
+    .\launch_parlay_pro.bat
+
+Run from Python:
+    python NFL_Parlay_Desktop_Pro.py
+
+
+🎓 LEARNING PATH
+================
+
+Day 1: Load games, select players, generate predictions
+Day 2: Understand confidence scores, click "ℹ️" buttons
+Day 3: Use narrative analysis to validate picks
+Day 4: Track your parlays, improve accuracy
+
+
+📝 CHANGELOG
+============
+
+v2.0.0 - Desktop Pro Edition
+• Single-window interface
+• Live schedule integration
+• Team roster loading
+• Confidence-scored predictions
+• Orange borders for low confidence
+• Tony Romo narratives
+• Data source tooltips
+• Team color themes
+
+
+⚠️ DISCLAIMER
+=============
+
+Entertainment & educational purposes only.
+Not financial advice. Gamble responsibly.
+Check local laws. Bet within your means.
+
+
+🏆 SUPPORT
+==========
+
+Issues? Check README_DESKTOP_PRO.md
+Questions? Review the "ℹ️" tooltips in app
+
+
+GOOD LUCK! 🏈📈
+===============
+
+Your journey to sharper NFL parlays starts now!

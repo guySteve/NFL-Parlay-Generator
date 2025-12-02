@@ -362,7 +362,7 @@ class GameScript(str, Enum):
 
 class GameContext(BaseModel):
     """
-    Game context containing betting lines and opponent information.
+    Game context containing betting lines and quantitative defensive metrics.
     
     Attributes:
         team: The team being analyzed.
@@ -370,14 +370,25 @@ class GameContext(BaseModel):
         spread: Point spread (negative = favorite).
         total: Over/Under total points.
         implied_team_total: Implied total points for the team.
-        opponent_rank: Opponent defensive rank (1-32, 1 being best).
+        opponent_def_epa: Opponent's defensive EPA per play (negative = better).
+        opponent_dvoa_pass: Opponent's DVOA vs pass (negative = better).
+        opponent_dvoa_run: Opponent's DVOA vs run (negative = better).
+        team_offense_epa_l4: Team's offensive EPA per play (last 4 games).
     """
     team: Annotated[str, Field(min_length=2, max_length=50)]
     opponent: Annotated[str, Field(min_length=2, max_length=50)]
     spread: Annotated[float, Field(ge=-30, le=30)]
     total: Annotated[float, Field(ge=30, le=70)]
     implied_team_total: Annotated[float, Field(ge=10, le=45)]
-    opponent_rank: Annotated[int, Field(ge=1, le=32)]
+    
+    # Advanced Quantitative Metrics
+    opponent_def_epa: Annotated[float, Field(ge=-0.5, le=0.5)] = -0.04
+    opponent_dvoa_pass: Annotated[float, Field(ge=-50, le=50)] = 8.2
+    opponent_dvoa_run: Annotated[float, Field(ge=-50, le=50)] = -5.5
+    team_offense_epa_l4: Annotated[float, Field(ge=-0.5, le=0.5)] = 0.15
+    
+    # Legacy field for backward compatibility (optional)
+    opponent_rank: Annotated[int, Field(ge=1, le=32)] = 16
     
     @field_validator('team', 'opponent')
     @classmethod
@@ -591,12 +602,25 @@ class PredictionStrategy(ABC):
         pass
     
     @abstractmethod
-    def apply_dvoa_modifier(
+    def apply_defensive_adjustment(
         self,
         value: float,
-        opponent_rank: int
+        opponent_def_epa: float,
+        opponent_dvoa: float,
+        is_pass_play: bool = True
     ) -> float:
-        """Apply DVOA-based opponent modifier."""
+        """
+        Apply defensive adjustment using EPA and DVOA metrics.
+        
+        Args:
+            value: Base projection value.
+            opponent_def_epa: Opponent's defensive EPA per play.
+            opponent_dvoa: Opponent's DVOA (pass or run).
+            is_pass_play: Whether this is a passing play.
+            
+        Returns:
+            Adjusted projection value.
+        """
         pass
 
 
@@ -650,6 +674,41 @@ class StandardPredictionStrategy(PredictionStrategy):
         elif poor_min <= opponent_rank <= poor_max:
             return value * Config.POOR_DEFENSE_BOOST
         return value
+    
+    def apply_defensive_adjustment(
+        self,
+        value: float,
+        opponent_def_epa: float,
+        opponent_dvoa: float,
+        is_pass_play: bool = True
+    ) -> float:
+        """
+        Apply quantitative defensive adjustment using EPA and DVOA (NEW METHOD).
+        
+        This replaces rank-based logic with continuous metrics.
+        
+        Args:
+            value: Base projection value.
+            opponent_def_epa: Opponent's defensive EPA per play (-0.5 to 0.5).
+            opponent_dvoa: Opponent's DVOA percentage (-50 to 50).
+            is_pass_play: Whether this is a passing play.
+            
+        Returns:
+            Adjusted projection value.
+        """
+        # EPA Adjustment: -0.2 EPA = 0.90x (good def), +0.2 EPA = 1.10x (bad def)
+        epa_modifier = 1.0 - (opponent_def_epa * 0.5)
+        
+        # DVOA Adjustment: -20% = 0.92x (good def), +20% = 1.08x (bad def)
+        dvoa_modifier = 1.0 - (opponent_dvoa / 250.0)
+        
+        # Weighted combination: EPA 65%, DVOA 35%
+        combined_modifier = (epa_modifier * 0.65) + (dvoa_modifier * 0.35)
+        
+        # Clamp to reasonable bounds (0.85x to 1.15x)
+        combined_modifier = max(0.85, min(1.15, combined_modifier))
+        
+        return value * combined_modifier
 
 
 # =============================================================================
@@ -730,14 +789,23 @@ class PredictionEngine:
             base_pass = self.strategy.calculate_base_projection(
                 stats.passing_yards_l5_avg, season_pass_avg
             )
-            adjusted_pass = self.strategy.apply_dvoa_modifier(
-                base_pass, self.game_context.opponent_rank
+            
+            # Apply EPA/DVOA defensive adjustment
+            adjusted_pass = self.strategy.apply_defensive_adjustment(
+                base_pass,
+                self.game_context.opponent_def_epa,
+                self.game_context.opponent_dvoa_pass,
+                is_pass_play=True
             )
             
+            # Apply team's recent offensive form
+            offensive_form_modifier = 1.0 + (self.game_context.team_offense_epa_l4 * 0.3)
+            adjusted_pass *= offensive_form_modifier
+
             # EPA Efficiency Modifier
             if stats.epa_per_play > Config.QB_EPA_THRESHOLD:
                 adjusted_pass *= Config.QB_EPA_BOOST
-            
+
             projections.append(self._create_projection(
                 player, "Passing Yards", adjusted_pass, lines.passing_yards
             ))
@@ -786,9 +854,18 @@ class PredictionEngine:
             base_rush = self.strategy.calculate_base_projection(
                 stats.rush_yards_l5_avg, season_rush_avg
             )
-            adjusted_rush = self.strategy.apply_dvoa_modifier(
-                base_rush, self.game_context.opponent_rank
+            
+            # Apply EPA/DVOA defensive adjustment (use run DVOA)
+            adjusted_rush = self.strategy.apply_defensive_adjustment(
+                base_rush,
+                self.game_context.opponent_def_epa,
+                self.game_context.opponent_dvoa_run,
+                is_pass_play=False
             )
+            
+            # Apply team's recent offensive form
+            offensive_form_modifier = 1.0 + (self.game_context.team_offense_epa_l4 * 0.25)
+            adjusted_rush *= offensive_form_modifier
             
             # Opportunity Share adjustment
             if stats.opportunity_share_pct > 70:
@@ -837,9 +914,18 @@ class PredictionEngine:
             base_rec = self.strategy.calculate_base_projection(
                 stats.rec_yards_l5_avg, season_rec_yards_avg
             )
-            adjusted_rec = self.strategy.apply_dvoa_modifier(
-                base_rec, self.game_context.opponent_rank
+            
+            # Apply EPA/DVOA defensive adjustment (use pass DVOA)
+            adjusted_rec = self.strategy.apply_defensive_adjustment(
+                base_rec,
+                self.game_context.opponent_def_epa,
+                self.game_context.opponent_dvoa_pass,
+                is_pass_play=True
             )
+            
+            # Apply team's recent offensive form
+            offensive_form_modifier = 1.0 + (self.game_context.team_offense_epa_l4 * 0.3)
+            adjusted_rec *= offensive_form_modifier
             
             # Target Share Volume Floor
             if stats.target_share_pct > Config.WR_TARGET_SHARE_THRESHOLD:
