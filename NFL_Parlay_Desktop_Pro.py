@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 NFL Parlay Generator - Professional Desktop Edition
-Production-ready GUI with live data, roster loading, and quantitative analytics.
+Production-ready GUI with live data, web-scraped roster loading, and quantitative analytics.
 
 Features:
 - Live NFL schedule from ESPN API
-- Team roster auto-loading
+- Team roster web scraping (no external API dependencies)
 - Confidence-scored predictions with orange borders for <60%
 - Tony Romo-style narrative analysis
 - Modern team-themed UI
 - Single-window interface (no popups)
 
 Author: NFL Analytics Team
-Version: 2.0.0
+Version: 2.1.0
 Python: 3.12+
 """
 
@@ -25,6 +25,9 @@ import pytz
 import json
 from dataclasses import dataclass
 import random
+from bs4 import BeautifulSoup
+import re
+import time
 
 
 # =============================================================================
@@ -115,48 +118,93 @@ NFL_TEAMS = {
     "Washington Commanders": {"primary": "#773141", "secondary": "#FFB612", "logo": "🏛️"},
 }
 
-# Default roster for testing (real API would fetch this)
-DEFAULT_ROSTERS = {
-    "Denver Broncos": {
-        "QB": [{"name": "Bo Nix", "number": "10"}],
-        "RB": [
-            {"name": "RJ Harvey", "number": "12"},
-            {"name": "Jaleel McLaughlin", "number": "38"},
-        ],
-        "WR": [
-            {"name": "Courtland Sutton", "number": "14"},
-            {"name": "Marvin Mims Jr.", "number": "19"},
-            {"name": "Troy Franklin", "number": "11"},
-        ],
-        "TE": [{"name": "Adam Trautman", "number": "82"}],
-    },
-    "Washington Commanders": {
-        "QB": [{"name": "Marcus Mariota", "number": "18"}],
-        "RB": [
-            {"name": "Brian Robinson Jr.", "number": "8"},
-            {"name": "Austin Ekeler", "number": "30"},
-        ],
-        "WR": [
-            {"name": "Terry McLaurin", "number": "17"},
-            {"name": "Dyami Brown", "number": "2"},
-        ],
-        "TE": [{"name": "Zach Ertz", "number": "86"}],
-    },
+# Team name mappings for ESPN URLs
+TEAM_URL_MAPPING = {
+    "Arizona Cardinals": "arizona-cardinals",
+    "Atlanta Falcons": "atlanta-falcons",
+    "Baltimore Ravens": "baltimore-ravens",
+    "Buffalo Bills": "buffalo-bills",
+    "Carolina Panthers": "carolina-panthers",
+    "Chicago Bears": "chicago-bears",
+    "Cincinnati Bengals": "cincinnati-bengals",
+    "Cleveland Browns": "cleveland-browns",
+    "Dallas Cowboys": "dallas-cowboys",
+    "Denver Broncos": "denver-broncos",
+    "Detroit Lions": "detroit-lions",
+    "Green Bay Packers": "green-bay-packers",
+    "Houston Texans": "houston-texans",
+    "Indianapolis Colts": "indianapolis-colts",
+    "Jacksonville Jaguars": "jacksonville-jaguars",
+    "Kansas City Chiefs": "kansas-city-chiefs",
+    "Las Vegas Raiders": "las-vegas-raiders",
+    "Los Angeles Chargers": "los-angeles-chargers",
+    "Los Angeles Rams": "los-angeles-rams",
+    "Miami Dolphins": "miami-dolphins",
+    "Minnesota Vikings": "minnesota-vikings",
+    "New England Patriots": "new-england-patriots",
+    "New Orleans Saints": "new-orleans-saints",
+    "New York Giants": "new-york-giants",
+    "New York Jets": "new-york-jets",
+    "Philadelphia Eagles": "philadelphia-eagles",
+    "Pittsburgh Steelers": "pittsburgh-steelers",
+    "San Francisco 49ers": "san-francisco-49ers",
+    "Seattle Seahawks": "seattle-seahawks",
+    "Tampa Bay Buccaneers": "tampa-bay-buccaneers",
+    "Tennessee Titans": "tennessee-titans",
+    "Washington Commanders": "washington-commanders",
+}
+
+# ESPN team abbreviations for roster URLs (".../name/{abbr}/{slug}")
+TEAM_ABBR = {
+    "Arizona Cardinals": "ari",
+    "Atlanta Falcons": "atl",
+    "Baltimore Ravens": "bal",
+    "Buffalo Bills": "buf",
+    "Carolina Panthers": "car",
+    "Chicago Bears": "chi",
+    "Cincinnati Bengals": "cin",
+    "Cleveland Browns": "cle",
+    "Dallas Cowboys": "dal",
+    "Denver Broncos": "den",
+    "Detroit Lions": "det",
+    "Green Bay Packers": "gb",
+    "Houston Texans": "hou",
+    "Indianapolis Colts": "ind",
+    "Jacksonville Jaguars": "jax",
+    "Kansas City Chiefs": "kc",
+    "Las Vegas Raiders": "lv",
+    "Los Angeles Chargers": "lac",
+    "Los Angeles Rams": "lar",
+    "Miami Dolphins": "mia",
+    "Minnesota Vikings": "min",
+    "New England Patriots": "ne",
+    "New Orleans Saints": "no",
+    "New York Giants": "nyg",
+    "New York Jets": "nyj",
+    "Philadelphia Eagles": "phi",
+    "Pittsburgh Steelers": "pit",
+    "San Francisco 49ers": "sf",
+    "Seattle Seahawks": "sea",
+    "Tampa Bay Buccaneers": "tb",
+    "Tennessee Titans": "ten",
+    "Washington Commanders": "wsh",
 }
 
 
 # =============================================================================
-# API & DATA FETCHING
+# API & DATA FETCHING WITH WEB SCRAPING
 # =============================================================================
 
 class NFLDataFetcher:
-    """Fetches NFL data from ESPN API."""
+    """Fetches NFL data - schedule from ESPN API, rosters from web scraping."""
     
     ESPN_API = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+    ESPN_ROSTER_BASE = "https://www.espn.com/nfl/team/roster/_/name/"
+    ESPN_ROSTER_SUFFIX = ""
     
     @staticmethod
     def get_todays_games() -> List[Dict]:
-        """Fetch today's NFL games."""
+        """Fetch today's NFL games from ESPN API."""
         try:
             response = requests.get(NFLDataFetcher.ESPN_API, timeout=10)
             response.raise_for_status()
@@ -208,11 +256,106 @@ class NFLDataFetcher:
             return []
     
     @staticmethod
-    def get_team_roster(team_name: str) -> Dict[str, List[Dict]]:
-        """Get team roster. Uses default data (real API would fetch from NFL.com)."""
-        return DEFAULT_ROSTERS.get(team_name, {
-            "QB": [], "RB": [], "WR": [], "TE": []
-        })
+    def scrape_team_roster(team_name: str) -> Dict[str, List[Dict]]:
+        """
+        Scrape team roster from ESPN website.
+        Returns: Dict with positions as keys and player lists as values
+        """
+        print(f"Scraping roster for {team_name}...")
+        
+        # Get team URL slug
+        team_slug = TEAM_URL_MAPPING.get(team_name)
+        if not team_slug:
+            print(f"No URL mapping found for {team_name}")
+            return {"QB": [], "RB": [], "WR": [], "TE": []}
+        
+        try:
+            # Build URL using ESPN abbr + slug, e.g. /name/ne/new-england-patriots
+            abbr = TEAM_ABBR.get(team_name)
+            if not abbr:
+                raise ValueError(f"No ESPN abbreviation for {team_name}")
+            url = f"{NFLDataFetcher.ESPN_ROSTER_BASE}{abbr}/{team_slug}"
+            print(f"Fetching from: {url}")
+            
+            # Add headers to mimic a browser and avoid 400s
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Referer': 'https://www.espn.com/nfl/teams'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=20)
+            if response.status_code == 404:
+                # Fallback to slug without abbr (legacy)
+                fallback = f"{NFLDataFetcher.ESPN_ROSTER_BASE}{team_slug}"
+                print(f"Retrying fallback: {fallback}")
+                response = requests.get(fallback, headers=headers, timeout=20)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            roster = {"QB": [], "RB": [], "WR": [], "TE": [], "K": [], "DEF": []}
+            
+            # Find roster table
+            tables = soup.find_all('div', class_='ResponsiveTable')
+            
+            for table in tables:
+                rows = table.find_all('tr')
+                
+                for row in rows[1:]:  # Skip header row
+                    cols = row.find_all('td')
+                    if len(cols) >= 3:
+                        # Extract player info
+                        name_cell = cols[1] if len(cols) > 1 else cols[0]
+                        name_link = name_cell.find('a')
+                        
+                        if name_link:
+                            player_name = name_link.text.strip()
+                            
+                            # Get position (usually in 3rd or 4th column)
+                            position = ''
+                            for col in cols[2:]:
+                                text = col.text.strip()
+                                if text and len(text) <= 3 and text.isalpha():
+                                    position = text.upper()
+                                    break
+                            
+                            # Get number (usually first column)
+                            number = cols[0].text.strip() if cols else '--'
+                            
+                            # Categorize by position
+                            if position:
+                                pos_key = position
+                                if pos_key in ['HB', 'FB']:
+                                    pos_key = 'RB'
+                                elif pos_key in ['OT', 'OG', 'C', 'OL']:
+                                    continue  # Skip offensive linemen
+                                elif pos_key in ['DT', 'DE', 'LB', 'CB', 'S', 'DB']:
+                                    pos_key = 'DEF'
+                                
+                                if pos_key in roster:
+                                    roster[pos_key].append({
+                                        'name': player_name,
+                                        'number': number,
+                                        'position': position
+                                    })
+            
+            # Remove empty defense category and limit results
+            if 'DEF' in roster and not roster['DEF']:
+                del roster['DEF']
+            
+            # Limit to top players per position (reduce clutter)
+            for pos in roster:
+                roster[pos] = roster[pos][:8]  # Max 8 players per position
+            
+            print(f"Successfully loaded {sum(len(v) for v in roster.values())} players")
+            return roster
+            
+        except Exception as e:
+            print(f"Error scraping roster for {team_name}: {e}")
+            # Return empty roster on error
+            return {"QB": [], "RB": [], "WR": [], "TE": []}
 
 
 # =============================================================================
@@ -772,7 +915,7 @@ class NFLParlayDesktopPro:
         self.status_label.config(text=f"Loaded {len(self.games_list)} games")
     
     def _load_selected_game(self):
-        """Load the selected game from the listbox."""
+        """Load the selected game from the listbox and scrape rosters for both teams."""
         selection = self.games_listbox.curselection()
         if not selection:
             messagebox.showwarning("No Selection", "Please select a game first")
@@ -807,12 +950,15 @@ class NFLParlayDesktopPro:
         # Update theme
         self._update_theme(game['home_team'])
         
-        # Load both team rosters
+        # Automatically scrape roster for home team
+        self.status_label.config(text=f"🔍 Loading game data and scraping rosters... Please wait.")
+        self.root.update_idletasks()
+        
         self.team_combo.set(game['home_team'])
         self._load_team_roster(None)
         
         self.status_label.config(
-            text=f"Game loaded: {game['away_team']} @ {game['home_team']} | Select players from roster"
+            text=f"✓ Game loaded: {game['away_team']} @ {game['home_team']} | Switch teams in roster dropdown as needed"
         )
     
     def _update_theme(self, team_name: str):
@@ -822,25 +968,50 @@ class NFLParlayDesktopPro:
             self.root.title(f"🏈 NFL Parlay Generator Pro - {team_name}")
     
     def _load_team_roster(self, event):
-        """Load roster for selected team."""
+        """Load roster for selected team via web scraping."""
         team = self.team_var.get()
         if not team:
             return
         
-        roster = NFLDataFetcher.get_team_roster(team)
+        self.status_label.config(text=f"🔍 Scraping roster for {team}... Please wait.")
+        self.root.update_idletasks()
         
         # Clear existing
         for listbox in self.roster_frames.values():
             listbox.delete(0, tk.END)
+            listbox.insert(tk.END, "Loading...")
+        
+        self.root.update_idletasks()
+        
+        # Scrape roster from web
+        roster = NFLDataFetcher.scrape_team_roster(team)
+        
+        # Clear loading message and populate
+        for listbox in self.roster_frames.values():
+            listbox.delete(0, tk.END)
         
         # Load players by position
+        total_players = 0
         for pos, players in roster.items():
             if pos in self.roster_frames:
                 for player in players:
                     display = f"#{player['number']} {player['name']}"
                     self.roster_frames[pos].insert(tk.END, display)
+                    total_players += 1
         
-        self.status_label.config(text=f"Loaded roster for {team}")
+        if total_players > 0:
+            self.status_label.config(text=f"✓ Loaded {total_players} players for {team}")
+        else:
+            self.status_label.config(text=f"⚠ No players found for {team} - check internet connection")
+            messagebox.showwarning(
+                "Roster Load Failed",
+                f"Could not load roster for {team}.\n\n"
+                "Possible causes:\n"
+                "• Internet connection issue\n"
+                "• ESPN website structure changed\n"
+                "• Team name not recognized\n\n"
+                "Try refreshing or selecting a different team."
+            )
     
     def _add_selected_players(self):
         """Add selected players to prediction queue."""

@@ -686,10 +686,12 @@ class NFLParlayGUI:
             roster = TEAM_ROSTERS[team]
             players = []
             for pos, player_list in roster.items():
-                for player in player_list:
+                starters_n = {"QB": 1, "RB": 1, "WR": 2, "TE": 1}.get(pos, 1)
+                for idx, player in enumerate(player_list):
                     has_stats = player['name'] in PLAYER_STATS
                     indicator = "✓" if has_stats else "○"
-                    players.append(f"{indicator} {player['name']} ({pos})")
+                    s_tag = "S " if idx < starters_n else ""
+                    players.append(f"{s_tag}{indicator} {player['name']} ({pos})")
             self.player_combo['values'] = players
             if players:
                 self.player_combo.current(0)
@@ -703,7 +705,10 @@ class NFLParlayGUI:
         
         # Parse selection
         parts = selection.split('(')
-        name = parts[0].strip().replace('✓ ', '').replace('○ ', '')
+        cleaned = parts[0].strip()
+        for tag in ("S ", "✓ ", "○ "):
+            cleaned = cleaned.replace(tag, '')
+        name = cleaned
         pos = parts[1].strip(')')
         
         # Open stats entry dialog

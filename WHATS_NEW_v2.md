@@ -1,6 +1,29 @@
-# 🎉 What's New in NFL Parlay Generator Pro v2.0
+# 🎉 What's New in NFL Parlay Generator Pro
 
-## Desktop Edition - Major Release
+## Version 2.1.0 - LIVE ROSTER WEB SCRAPING UPDATE 🚀
+
+**Release Date**: December 2024
+
+### 🆕 What's New in v2.1.0
+
+**MAJOR UPDATE: Real-Time Roster Loading**
+- ✅ **Live web scraping** from ESPN.com for all 32 NFL teams
+- ✅ **No more hardcoded rosters** - always current data
+- ✅ **Automatic roster loading** when you select a game
+- ✅ **All 32 teams supported** (previously only 2)
+- ✅ **No API keys required** - works immediately
+
+**How It Works:**
+1. Select a game → Home team roster automatically scraped from ESPN.com
+2. Takes 3-10 seconds (fetching from website)
+3. Switch to away team anytime using the dropdown
+4. Always current (reflects trades, signings, injuries)
+
+**See `ROSTER_UPDATE.md` for complete technical details.**
+
+---
+
+## Version 2.0.0 - Desktop Edition - Major Release
 
 ---
 

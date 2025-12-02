@@ -11,70 +11,23 @@ import json
 from datetime import datetime
 import random
 
-# =============================================================================
-# NFL DATA - Team Rosters
-# =============================================================================
+# Import rosters and player stats from NFL_pre
+try:
+    from NFL_pre import TEAM_ROSTERS, PLAYER_STATS
+except ImportError:
+    print("Warning: Could not import from NFL_pre.py. Using fallback rosters.")
+    TEAM_ROSTERS = {}
+    PLAYER_STATS = {}
 
-NFL_ROSTERS = {
-    "Denver Broncos": {
-        "QB": ["Bo Nix", "Jarrett Stidham"],
-        "RB": ["Javonte Williams", "Jaleel McLaughlin", "Tyler Badie", "Audric Estime"],
-        "WR": ["Courtland Sutton", "Marvin Mims Jr.", "Troy Franklin", "Lil'Jordan Humphrey"],
-        "TE": ["Adam Trautman", "Greg Dulcich", "Nate Adkins"]
-    },
-    "Washington Commanders": {
-        "QB": ["Jayden Daniels", "Marcus Mariota"],
-        "RB": ["Brian Robinson Jr.", "Austin Ekeler", "Chris Rodriguez"],
-        "WR": ["Terry McLaurin", "Noah Brown", "Dyami Brown", "Olamide Zaccheaus"],
-        "TE": ["Zach Ertz", "John Bates", "Ben Sinnott"]
-    },
-    "Kansas City Chiefs": {
-        "QB": ["Patrick Mahomes", "Carson Wentz"],
-        "RB": ["Isiah Pacheco", "Kareem Hunt", "Samaje Perine"],
-        "WR": ["DeAndre Hopkins", "Xavier Worthy", "JuJu Smith-Schuster", "Justin Watson"],
-        "TE": ["Travis Kelce", "Noah Gray", "Peyton Hendershot"]
-    },
-    "Buffalo Bills": {
-        "QB": ["Josh Allen", "Mitch Trubisky"],
-        "RB": ["James Cook", "Ty Johnson", "Ray Davis"],
-        "WR": ["Khalil Shakir", "Curtis Samuel", "Mack Hollins", "Keon Coleman"],
-        "TE": ["Dalton Kincaid", "Dawson Knox", "Quintin Morris"]
-    },
-    "Dallas Cowboys": {
-        "QB": ["Cooper Rush", "Trey Lance"],
-        "RB": ["Rico Dowdle", "Ezekiel Elliott", "Deuce Vaughn"],
-        "WR": ["CeeDee Lamb", "Jalen Brooks", "KaVontae Turpin", "Ryan Flournoy"],
-        "TE": ["Jake Ferguson", "Luke Schoonmaker", "Brevyn Spann-Ford"]
-    },
-    "Philadelphia Eagles": {
-        "QB": ["Jalen Hurts", "Kenny Pickett"],
-        "RB": ["Saquon Barkley", "Kenneth Gainwell", "Will Shipley"],
-        "WR": ["AJ Brown", "DeVonta Smith", "Jahan Dotson", "Johnny Wilson"],
-        "TE": ["Dallas Goedert", "Grant Calcaterra", "CJ Uzomah"]
-    },
-    "San Francisco 49ers": {
-        "QB": ["Brock Purdy", "Brandon Allen"],
-        "RB": ["Christian McCaffrey", "Jordan Mason", "Isaac Guerendo", "Patrick Taylor"],
-        "WR": ["Deebo Samuel", "Jauan Jennings", "Ricky Pearsall", "Jacob Cowing"],
-        "TE": ["George Kittle", "Eric Saubert", "Jake Tonges"]
-    },
-    "Miami Dolphins": {
-        "QB": ["Tua Tagovailoa", "Tyler Huntley"],
-        "RB": ["De'Von Achane", "Raheem Mostert", "Jeff Wilson Jr.", "Jaylen Wright"],
-        "WR": ["Tyreek Hill", "Jaylen Waddle", "Odell Beckham Jr.", "Malik Washington"],
-        "TE": ["Jonnu Smith", "Durham Smythe", "Julian Hill"]
-    },
-}
+# Import schedule fetcher
+try:
+    from nfl_schedule import NFLScheduleFetcher
+except ImportError:
+    NFLScheduleFetcher = None
 
-# Sample games for Week 14
-CURRENT_GAMES = [
-    {"home": "Kansas City Chiefs", "away": "Los Angeles Chargers", "time": "Sun 8:20 PM ET", "spread": -4.5, "total": 43.0},
-    {"home": "San Francisco 49ers", "away": "Chicago Bears", "time": "Sun 4:25 PM ET", "spread": -5.5, "total": 44.5},
-    {"home": "Miami Dolphins", "away": "New York Jets", "time": "Sun 1:00 PM ET", "spread": -6.0, "total": 45.5},
-    {"home": "Buffalo Bills", "away": "Los Angeles Rams", "time": "Sun 4:25 PM ET", "spread": -4.5, "total": 49.0},
-    {"home": "Philadelphia Eagles", "away": "Carolina Panthers", "time": "Sun 1:00 PM ET", "spread": -12.5, "total": 46.0},
-    {"home": "Dallas Cowboys", "away": "Cincinnati Bengals", "time": "Mon 8:15 PM ET", "spread": 5.5, "total": 49.5},
-]
+# =============================================================================
+# NFL DATA - Team Colors & Game Data
+# =============================================================================
 
 # NFL Team Colors
 NFL_COLORS = {
@@ -86,6 +39,10 @@ NFL_COLORS = {
     "Philadelphia Eagles": ("#004C54", "#A5ACAF"),
     "San Francisco 49ers": ("#AA0000", "#B3995D"),
     "Miami Dolphins": ("#008E97", "#FC4C02"),
+    "Baltimore Ravens": ("#241773", "#000000"),
+    "Cincinnati Bengals": ("#FB4F14", "#000000"),
+    "Cleveland Browns": ("#311D00", "#FF3C00"),
+    "Pittsburgh Steelers": ("#FFB612", "#000000"),
     "Generic NFL": ("#013369", "#D50A0A")
 }
 
@@ -289,7 +246,7 @@ class NFLParlayProApp:
         
         tk.Label(teams_row, text="Team A:", bg='#ffffff', font=('Segoe UI', 9, 'bold'), width=20).pack(side=tk.LEFT, padx=5)
         
-        team_list = list(NFL_ROSTERS.keys())
+        team_list = list(TEAM_ROSTERS.keys()) if TEAM_ROSTERS else ["Denver Broncos", "Washington Commanders"]
         self.team_combo = ttk.Combobox(teams_row, textvariable=self.selected_team, values=team_list, state='readonly', width=30, font=('Segoe UI', 9))
         self.team_combo.pack(side=tk.LEFT, padx=5)
         self.team_combo.bind('<<ComboboxSelected>>', lambda e: self._update_theme(self.selected_team.get()))
@@ -433,7 +390,7 @@ class NFLParlayProApp:
         tk.Label(team_select_frame, text="Load Roster For:", bg='#ffffff', font=('Segoe UI', 10, 'bold')).pack(side=tk.LEFT, padx=5)
         
         self.roster_team_var = tk.StringVar(value="Denver Broncos")
-        team_list = list(NFL_ROSTERS.keys())
+        team_list = list(TEAM_ROSTERS.keys()) if TEAM_ROSTERS else ["Denver Broncos", "Washington Commanders"]
         roster_combo = ttk.Combobox(team_select_frame, textvariable=self.roster_team_var, values=team_list, state='readonly', width=30, font=('Segoe UI', 9))
         roster_combo.pack(side=tk.LEFT, padx=5)
         roster_combo.bind('<<ComboboxSelected>>', self._load_roster)
@@ -595,14 +552,15 @@ class NFLParlayProApp:
         """Load and display the roster for selected team"""
         team_name = self.roster_team_var.get()
         
-        if team_name not in NFL_ROSTERS:
+        if team_name not in TEAM_ROSTERS:
+            self.status_var.set(f"⚠ No roster data for {team_name}")
             return
         
         # Clear current display
         for widget in self.roster_display_frame.winfo_children():
             widget.destroy()
         
-        roster = NFL_ROSTERS[team_name]
+        roster = TEAM_ROSTERS[team_name]
         
         # Display by position
         positions = ['QB', 'RB', 'WR', 'TE']
@@ -622,17 +580,30 @@ class NFLParlayProApp:
                 )
                 pos_frame.grid(row=i//2, column=i%2, sticky=tk.NSEW, padx=10, pady=10)
                 
-                # Player buttons
+                # Player buttons - handle both dict format (from NFL_pre.py) and list format
                 for player in roster[pos]:
+                    # Extract player name whether it's a dict or string
+                    if isinstance(player, dict):
+                        player_name = player.get("name", str(player))
+                        player_num = player.get("number", "")
+                        display_text = f"+ {player_name} (#{player_num})" if player_num else f"+ {player_name}"
+                    else:
+                        player_name = player
+                        display_text = f"+ {player_name}"
+                    
+                    # Check if player has stats loaded
+                    has_stats = player_name in PLAYER_STATS
+                    btn_bg = colors[pos] if has_stats else '#d0d0d0'
+                    
                     player_btn = tk.Button(
                         pos_frame,
-                        text=f"+ {player}",
-                        bg=colors[pos],
+                        text=display_text,
+                        bg=btn_bg,
                         fg='#000000',
-                        font=('Segoe UI', 9),
+                        font=('Segoe UI', 9, 'bold' if has_stats else 'normal'),
                         relief=tk.RAISED,
                         cursor='hand2',
-                        command=lambda p=player, po=pos: self._add_player(p, po)
+                        command=lambda p=player_name, po=pos: self._add_player(p, po)
                     )
                     player_btn.pack(fill=tk.X, padx=5, pady=3)
         
@@ -640,7 +611,7 @@ class NFLParlayProApp:
         self.roster_display_frame.grid_columnconfigure(0, weight=1)
         self.roster_display_frame.grid_columnconfigure(1, weight=1)
         
-        self.status_var.set(f"✓ Loaded roster for {team_name}")
+        self.status_var.set(f"✓ Loaded roster for {team_name} ({len([p for pos in roster.values() for p in pos])} players)")
         
     def _add_player(self, player_name, position):
         """Add a player to selection"""
